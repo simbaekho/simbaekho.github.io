@@ -1,0 +1,497 @@
+﻿<!DOCTYPE html>
+<html lang="ko"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>포켓몬 상성 암기 & 퀴즈</title>
+<!-- Tailwind CSS 로드 -->
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+   /* 기본 폰트 설정 */
+   body {
+       font-family: 'Inter', 'Pretendard', sans-serif;
+       transition: background-color 0.3s ease; /* 다크모드 전환 애니메이션 */
+   }
+   
+   /* 라이트 모드 기본 배경 */
+   body.light-mode {
+       background-color: #f3f4f6; /* bg-gray-100 */
+       color: #1f2937; /* text-gray-900 */
+   }
+
+   /* 다크 모드 배경 및 텍스트 */
+   body.dark-mode {
+       background-color: #1a202c; /* bg-gray-900 */
+       color: #e2e8f0; /* text-gray-200 */
+   }
+
+   /* 메인 컨테이너 */
+   .main-container {
+       transition: background-color 0.3s ease, box-shadow 0.3s ease; /* 다크모드 전환 애니메이션 */
+   }
+   .light-mode .main-container {
+       background-color: #ffffff; /* bg-white */
+       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+   }
+   .dark-mode .main-container {
+       background-color: #2d3748; /* bg-gray-800 */
+       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+   }
+
+   /* 탭 버튼 스타일 */
+   .tab-btn {
+       transition: all 0.3s;
+   }
+   .light-mode .tab-btn.active {
+       background-color: #3b82f6; /* bg-blue-600 */
+       color: white;
+       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+   }
+   .light-mode .tab-btn.inactive {
+       background-color: #e5e7eb; /* bg-gray-200 */
+       color: #4b5563; /* text-gray-600 */
+   }
+   .dark-mode .tab-btn.active {
+       background-color: #63b3ed; /* bg-blue-400 */
+       color: #1a202c; /* text-gray-900 */
+       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+   }
+   .dark-mode .tab-btn.inactive {
+       background-color: #4a5568; /* bg-gray-700 */
+       color: #e2e8f0; /* text-gray-200 */
+   }
+
+   /* 문제/팁 영역 배경 */
+   .light-mode #question-area, .light-mode #study-content > div {
+       background-color: #f9fafb; /* bg-gray-50 */
+       border-color: #e5e7eb; /* border-gray-200 */
+       color: #4b5563; /* text-gray-700 */
+   }
+   .dark-mode #question-area, .dark-mode #study-content > div {
+       background-color: #4a5568; /* bg-gray-700 */
+       border-color: #636b77; /* border-gray-600 */
+       color: #e2e8f0; /* text-gray-200 */
+   }
+
+   /* 암기 팁 내부 파란 박스 */
+   .light-mode .bg-blue-50 {
+       background-color: #eff6ff; /* Tailwind bg-blue-50 */
+       border-left-color: #60a5fa; /* Tailwind border-blue-400 */
+   }
+   .dark-mode .bg-blue-50 {
+       background-color: #2c5282; /* Custom darker blue */
+       border-left-color: #63b3ed; /* Tailwind border-blue-400 equivalent */
+       color: #e2e8f0;
+   }
+   
+   /* 타입 버튼/뱃지 공통 스타일 (기존과 동일) */
+   .type-badge {
+       display: inline-flex;
+       align-items: center;
+       justify-content: center;
+       padding: 0.5rem 1rem;
+       margin: 0.25rem;
+       border-radius: 9999px; /* rounded-full */
+       font-weight: 600;
+       color: white;
+       min-width: 80px; /* 최소 너비 */
+       line-height: 1.25;
+       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+   }
+
+   /* 퀴즈용 버튼 스타일 */
+   .type-btn {
+       cursor: pointer;
+       transition: all 0.2s ease-in-out;
+       border: 2px solid transparent;
+   }
+
+   /* 타입별 색상 (기존과 동일) */
+   .type-노말 { background-color: #A8A878; }
+   .type-불꽃 { background-color: #F08030; }
+   .type-물 { background-color: #6890F0; }
+   .type-풀 { background-color: #78C850; }
+   .type-전기 { background-color: #F8D030; }
+   .type-얼음 { background-color: #98D8D8; }
+   .type-격투 { background-color: #C03028; }
+   .type-독 { background-color: #A040A0; }
+   .type-땅 { background-color: #E0C068; }
+   .type-비행 { background-color: #A890F0; }
+   .type-에스퍼 { background-color: #F85888; }
+   .type-벌레 { background-color: #A8B820; }
+   .type-바위 { background-color: #B8A038; }
+   .type-고스트 { background-color: #705898; }
+   .type-드래곤 { background-color: #7038F8; }
+   .type-강철 { background-color: #B8B8D0; }
+   .type-악 { background-color: #705848; }
+   .type-페어리 { background-color: #EE99AC; }
+
+   /* 퀴즈 선택 버튼 스타일 */
+   .type-btn.selected {
+       border: 2px solid #3b82f6; /* border-blue-500 */
+       transform: scale(1.05);
+       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+   }
+   .type-btn.correct {
+       background-color: #4ade80; /* bg-green-400 */
+       border-color: #16a34a; /* border-green-600 */
+   }
+   .type-btn.incorrect {
+       background-color: #f87171; /* bg-red-400 */
+       border-color: #dc2626; /* border-red-600 */
+       opacity: 0.7;
+   }
+   .type-btn.missed {
+       background-color: #60a5fa; /* bg-blue-400 */
+       border-color: #2563eb; /* border-blue-600 */
+       opacity: 1;
+   }
+
+   /* 섹션 숨기기 */
+   .section-hidden {
+       display: none;
+   }
+</style>
+
+</head> <body class="flex items-center justify-center min-h-screen p-4 light-mode">
+<div class="w-full max-w-lg main-container rounded-2xl">
+   
+   <!-- 탭 네비게이션 -->
+   <div class="flex p-2 rounded-t-2xl light-mode:bg-gray-100 dark-mode:bg-gray-800">
+       <button id="tab-quiz" class="tab-btn w-1/2 py-3 font-bold rounded-lg active">
+           퀴즈 풀기 🧠
+       </button>
+       <button id="tab-study" class="tab-btn w-1/2 py-3 font-bold rounded-lg inactive">
+           암기 팁 보기 📚
+       </button>
+   </div>
+
+   <!-- 메인 컨텐츠 -->
+   <div class="p-6">
+       <!-- 퀴즈 섹션 -->
+       <div id="section-quiz" class="space-y-6">
+           <h1 class="text-3xl font-bold text-center">포켓몬 상성 퀴즈</h1>
+           
+           <div id="question-area" class="text-center p-4 rounded-lg">
+               <p class="text-lg mb-3">다음 타입이 <strong class="text-red-500">2배</strong>의 데미지를 주는 상성은?</p>
+               <div id="question-type-display" class="type-badge text-2xl mx-auto pointer-events-none" style="min-width: 120px;">
+                   로딩중...
+               </div>
+           </div>
+
+           <div id="options-container" class="flex flex-wrap justify-center p-4 border-t border-b light-mode:border-gray-200 dark-mode:border-gray-700" style="max-height: 250px; overflow-y: auto;">
+               <!-- 타입 버튼들이 여기에 동적으로 생성됩니다. -->
+           </div>
+
+           <div id="result-message" class="text-center text-2xl font-semibold hidden"></div>
+           <div id="correct-answer-display" class="text-center text-md light-mode:text-gray-600 dark-mode:text-gray-400 hidden"></div>
+
+           <div class="flex space-x-4">
+               <button id="check-answer-btn" class="w-full py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
+                   정답 확인
+               </button>
+               <button id="next-question-btn" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 hidden">
+                   다음 문제
+               </button>
+           </div>
+       </div>
+
+       <!-- 암기 팁 섹션 -->
+       <div id="section-study" class="space-y-4 section-hidden">
+           <h1 class="text-3xl font-bold text-center">상성 암기 팁</h1>
+           <p class="text-center light-mode:text-gray-600 dark-mode:text-gray-400">현실의 이치로 연상하며 외워보세요!</p>
+           <div id="study-content" class="space-y-5 p-4 rounded-lg" style="max-height: 500px; overflow-y: auto;">
+               <!-- 암기 팁 내용이 여기에 동적으로 생성됩니다. -->
+           </div>
+       </div>
+   </div>
+
+   <!-- 다크/라이트 모드 토글 버튼 -->
+   <div class="p-4 text-center border-t light-mode:border-gray-200 dark-mode:border-gray-700">
+       <button id="theme-toggle-btn" class="py-2 px-4 rounded-full light-mode:bg-gray-200 light-mode:text-gray-700 dark-mode:bg-gray-700 dark-mode:text-gray-200 transition-colors duration-200 flex items-center justify-center mx-auto space-x-2">
+           <span id="theme-icon">🌙</span>
+           <span id="theme-text">다크 모드</span>
+       </button>
+   </div>
+</div>
+
+<script>
+   document.addEventListener('DOMContentLoaded', () => {
+
+       // [데이터] 포켓몬 상성 2배 암기 팁 (Single Source of Truth)
+       const mnemonics = {
+           '노말': { strong: [], reason: "노말(평범함) 타입은 특별히 2배로 공격하는 상대가 없습니다." },
+           '불꽃': { strong: ['풀', '얼음', '벌레', '강철'], reason: "🔥 불은 풀과 벌레를 태우고, 얼음을 녹이며, 강철을 제련(녹임)합니다." },
+           '물': { strong: ['불꽃', '땅', '바위'], reason: "💧 물은 불을 끄고, 땅을 진흙으로 만들며, 바위를 깎아냅니다(침식)." },
+           '풀': { strong: ['물', '땅', '바위'], reason: "🌿 풀(식물)은 물을 영양분으로 흡수하고, 땅과 바위 틈을 뚫고 자라납니다." },
+           '전기': { strong: ['물', '비행'], reason: "⚡️ 전기는 물에 잘 통하고, 하늘을 나는 비행체(새)는 번개에 맞기 쉽습니다." },
+           '얼음': { strong: ['풀', '땅', '비행', '드래곤'], reason: "❄️ 얼음(추위)은 식물을 얼리고, 땅을 얼어붙게 하며, 비행체의 날개를 얼립니다. (드래곤은 변온동물이라 추위에 약하다고 연상!)" },
+           '격투': { strong: ['노말', '얼음', '바위', '강철', '악'], reason: "✊ 무술가는 단단한 얼음, 바위, 강철을 주먹으로 깰 수 있습니다. '악'은 정의의 주먹에 약하고, '노말'(평범함)보다 강합니다." },
+           '독': { strong: ['풀', '페어리'], reason: "☠️ 독은 식물(풀)을 시들게 하고, 연약하고 신비로운 요정(페어리)에게 치명적입니다." },
+           '땅': { strong: ['불꽃', '전기', '독', '바위', '강철'], reason: "⛰️ 땅(흙)은 불을 덮어 끄고, 전기를 흡수(접지)하며, 독을 중화하고, 바위와 강철도 지진으로 무너뜨립니다." },
+           '비행': { strong: ['풀', '격투', '벌레'], reason: "🕊️ 하늘을 나는 새는 지상의 풀, 격투가, 벌레를 위에서 공격하기 유리합니다." },
+           '에스퍼': { strong: ['격투', '독'], reason: "🔮 초능력(에스퍼)은 단순한 힘(격투)이나 물질(독)을 제압하는 신비한 힘입니다." },
+           '벌레': { strong: ['풀', '에스퍼', '악'], reason: "🐞 벌레는 풀을 갉아먹습니다. 또, 초능력자나 악당도 벌레를 보면 깜짝 놀라 집중을 못한다고 연상해보세요!" },
+           '바위': { strong: ['불꽃', '얼음', '비행', '벌레'], reason: "💎 단단한 바위는 불을 막고, 얼음을 부수며, 하늘의 비행체를 격추(돌팔매)하고, 벌레를 짓누릅니다." },
+           '고스트': { strong: ['에스퍼', '고스트'], reason: "👻 유령(고스트)은 초능력(에스퍼)의 정신을 붕괴시키고, 유령은 유령끼리만 통합니다." },
+           '드래곤': { strong: ['드래곤'], reason: "🐲 드래곤을 이길 수 있는 것은 더 강한 드래곤뿐입니다." },
+           '강철': { strong: ['얼음', '바위', '페어리'], reason: "⚙️ 강철은 얼음과 바위를 부수고, 신비한 힘(페어리)을 가진 요정에게 차가운 쇠는 상극입니다." },
+           '악': { strong: ['에스퍼', '고스트'], reason: "🌙 악(어둠/비겁함)은 초능력자의 마음을 어지럽히고(기습), 유령(고스트)보다 강한 어둠의 힘입니다." },
+           '페어리': { strong: ['격투', '드래곤', '악'], reason: "💖 요정의 신비한 힘은 단순한 힘(격투), 강력한 용(드래곤), 사악한 기운(악)을 정화하고 물리칩니다." }
+       };
+
+       // [데이터] 퀴즈용 데이터 (mnemonics 객체에서 자동 생성)
+       const typeData = {};
+       for (const type in mnemonics) {
+           typeData[type] = mnemonics[type].strong;
+       }
+
+       const allTypes = Object.keys(typeData);
+
+       // [데이터] 타입별 색상 매핑 (CSS 클래스명)
+       const typeColors = {
+           '노말': 'type-노말', '불꽃': 'type-불꽃', '물': 'type-물', '풀': 'type-풀',
+           '전기': 'type-전기', '얼음': 'type-얼음', '격투': 'type-격투', '독': 'type-독',
+           '땅': 'type-땅', '비행': 'type-비행', '에스퍼': 'type-에스퍼', '벌레': 'type-벌레',
+           '바위': 'type-바위', '고스트': 'type-고스트', '드래곤': 'type-드래곤',
+           '강철': 'type-강철', '악': 'type-악', '페어리': 'type-페어리'
+       };
+
+       // --- [공통 DOM 요소] ---
+       const body = document.body;
+       const tabQuiz = document.getElementById('tab-quiz');
+       const tabStudy = document.getElementById('tab-study');
+       const sectionQuiz = document.getElementById('section-quiz');
+       const sectionStudy = document.getElementById('section-study');
+       const themeToggleBtn = document.getElementById('theme-toggle-btn');
+       const themeIcon = document.getElementById('theme-icon');
+       const themeText = document.getElementById('theme-text');
+
+       // --- [암기 팁 섹션 로직] ---
+       const studyContent = document.getElementById('study-content');
+
+       function renderMnemonics() {
+           studyContent.innerHTML = '';
+           allTypes.forEach(type => {
+               const data = mnemonics[type];
+               
+               const container = document.createElement('div');
+               container.className = 'p-4 rounded-lg shadow-sm'; // light/dark mode css handled by body class
+               
+               // Add conditional classes for light/dark mode for borders and backgrounds
+               container.classList.add('light-mode:bg-white', 'light-mode:border', 'light-mode:border-gray-200');
+               container.classList.add('dark-mode:bg-gray-700', 'dark-mode:border', 'dark-mode:border-gray-600');
+
+
+               // 공격 타입
+               const attackerDiv = document.createElement('div');
+               attackerDiv.className = 'flex items-center space-x-2 mb-3';
+               const attackerBadge = document.createElement('span');
+               attackerBadge.className = `type-badge ${typeColors[type]}`;
+               attackerBadge.textContent = type;
+               attackerDiv.appendChild(attackerBadge);
+               
+               const attackerText = document.createElement('span');
+               attackerText.textContent = '이(가) 강한 상대:';
+               attackerText.classList.add('light-mode:text-gray-800', 'dark-mode:text-gray-200');
+               attackerDiv.appendChild(attackerText);
+
+               // 강한 상대 타입
+               const strongAgainstDiv = document.createElement('div');
+               strongAgainstDiv.className = 'flex flex-wrap mb-3';
+               if (data.strong.length > 0) {
+                   data.strong.forEach(targetType => {
+                       const targetBadge = document.createElement('span');
+                       targetBadge.className = `type-badge ${typeColors[targetType]} text-sm py-1 px-3`;
+                       targetBadge.textContent = targetType;
+                       strongAgainstDiv.appendChild(targetBadge);
+                   });
+               } else {
+                   const noTargetText = document.createElement('span');
+                   noTargetText.textContent = '없음';
+                   noTargetText.className = 'ml-2 light-mode:text-gray-500 dark-mode:text-gray-400';
+                   strongAgainstDiv.appendChild(noTargetText);
+               }
+
+               // 암기 팁 (이유)
+               const reasonP = document.createElement('p');
+               reasonP.className = 'text-sm p-3 border-l-4 rounded-r-lg bg-blue-50 border-blue-400'; // Dark mode styles for this are in <style>
+               reasonP.textContent = data.reason;
+
+               container.appendChild(attackerDiv);
+               container.appendChild(strongAgainstDiv);
+               container.appendChild(reasonP);
+               studyContent.appendChild(container);
+           });
+       }
+
+       // --- [퀴즈 섹션 로직] ---
+       const questionTypeDisplay = document.getElementById('question-type-display');
+       const optionsContainer = document.getElementById('options-container');
+       const checkAnswerBtn = document.getElementById('check-answer-btn');
+       const nextQuestionBtn = document.getElementById('next-question-btn');
+       const resultMessage = document.getElementById('result-message');
+       const correctAnswerDisplay = document.getElementById('correct-answer-display');
+
+       let currentQuestionType = '';
+       let correctAnswers = [];
+       let selectedAnswers = new Set();
+       let isAnswerChecked = false;
+
+       function renderOptions() {
+           optionsContainer.innerHTML = '';
+           allTypes.forEach(type => {
+               const btn = document.createElement('button');
+               btn.textContent = type;
+               btn.dataset.type = type;
+               btn.className = `type-badge type-btn ${typeColors[type]}`;
+               
+               btn.addEventListener('click', () => {
+                   if (isAnswerChecked) return;
+                   const selectedType = btn.dataset.type;
+                   if (selectedAnswers.has(selectedType)) {
+                       selectedAnswers.delete(selectedType);
+                       btn.classList.remove('selected');
+                   } else {
+                       selectedAnswers.add(selectedType);
+                       btn.classList.add('selected');
+                   }
+               });
+               optionsContainer.appendChild(btn);
+           });
+       }
+
+       function loadQuestion() {
+           isAnswerChecked = false;
+           selectedAnswers.clear();
+           resultMessage.classList.add('hidden');
+           correctAnswerDisplay.classList.add('hidden');
+           checkAnswerBtn.classList.remove('hidden');
+           nextQuestionBtn.classList.add('hidden');
+
+           document.querySelectorAll('.type-btn').forEach(btn => {
+               btn.classList.remove('selected', 'correct', 'incorrect', 'missed');
+               btn.disabled = false;
+           });
+
+           currentQuestionType = allTypes[Math.floor(Math.random() * allTypes.length)];
+           correctAnswers = typeData[currentQuestionType];
+
+           questionTypeDisplay.textContent = currentQuestionType;
+           questionTypeDisplay.className = `type-badge text-2xl mx-auto pointer-events-none ${typeColors[currentQuestionType]}`;
+       }
+
+       function checkAnswer() {
+           if (isAnswerChecked) return;
+           isAnswerChecked = true;
+
+           let isPerfectlyCorrect = true;
+           const correctSet = new Set(correctAnswers);
+
+           document.querySelectorAll('.type-btn').forEach(btn => {
+               const type = btn.dataset.type;
+               btn.disabled = true; 
+
+               const isCorrect = correctSet.has(type);
+               const isSelected = selectedAnswers.has(type);
+
+               if (isSelected && isCorrect) {
+                   btn.classList.add('correct');
+               } else if (isSelected && !isCorrect) {
+                   btn.classList.add('incorrect');
+                   isPerfectlyCorrect = false;
+               } else if (!isSelected && isCorrect) {
+                   btn.classList.add('missed');
+                   isPerfectlyCorrect = false;
+               }
+           });
+
+           if (correctSet.size === 0 && selectedAnswers.size === 0) {
+                isPerfectlyCorrect = true; 
+           }
+           
+           if (isPerfectlyCorrect) {
+               resultMessage.textContent = '🎉 완벽해요! 정답입니다! 🎉';
+               resultMessage.className = 'text-center text-2xl font-semibold text-green-600';
+           } else {
+               resultMessage.textContent = '아쉽네요! 😥';
+               resultMessage.className = 'text-center text-2xl font-semibold text-red-600';
+           }
+
+           const answerText = correctAnswers.length > 0 ? correctAnswers.join(', ') : '없음';
+           correctAnswerDisplay.textContent = `정답: ${answerText}`;
+           
+           resultMessage.classList.remove('hidden');
+           correctAnswerDisplay.classList.remove('hidden');
+           checkAnswerBtn.classList.add('hidden');
+           nextQuestionBtn.classList.remove('hidden');
+       }
+
+       // --- [탭 전환 로직] ---
+       function switchTab(tab) {
+           if (tab === 'quiz') {
+               tabQuiz.classList.replace('inactive', 'active');
+               tabStudy.classList.replace('active', 'inactive');
+               sectionQuiz.classList.remove('section-hidden');
+               sectionStudy.classList.add('section-hidden');
+           } else if (tab === 'study') {
+               tabStudy.classList.replace('inactive', 'active');
+               tabQuiz.classList.replace('active', 'inactive');
+               sectionStudy.classList.remove('section-hidden');
+               sectionQuiz.classList.add('section-hidden');
+           }
+       }
+
+       // --- [다크/라이트 모드 로직] ---
+       function toggleDarkMode() {
+           if (body.classList.contains('light-mode')) {
+               body.classList.replace('light-mode', 'dark-mode');
+               themeIcon.textContent = '☀️';
+               themeText.textContent = '라이트 모드';
+               localStorage.setItem('theme', 'dark');
+           } else {
+               body.classList.replace('dark-mode', 'light-mode');
+               themeIcon.textContent = '🌙';
+               themeText.textContent = '다크 모드';
+               localStorage.setItem('theme', 'light');
+           }
+           // 탭 버튼의 active/inactive 스타일을 다시 적용하여 모드 변경에 맞춤
+           const currentActiveTab = sectionQuiz.classList.contains('section-hidden') ? 'study' : 'quiz';
+           switchTab(currentActiveTab); 
+       }
+
+       // --- [초기화] ---
+       function initialize() {
+           // 저장된 테마 불러오기 (기본은 라이트)
+           const savedTheme = localStorage.getItem('theme') || 'light';
+           if (savedTheme === 'dark') {
+               body.classList.replace('light-mode', 'dark-mode');
+               themeIcon.textContent = '☀️';
+               themeText.textContent = '라이트 모드';
+           } else {
+               // body.classList.add('light-mode'); // 기본값이므로 필요 없음
+               themeIcon.textContent = '🌙';
+               themeText.textContent = '다크 모드';
+           }
+
+           // 탭 리스너
+           tabQuiz.addEventListener('click', () => switchTab('quiz'));
+           tabStudy.addEventListener('click', () => switchTab('study'));
+
+           // 암기 팁 렌더링
+           renderMnemonics();
+           
+           // 퀴즈 렌더링 및 첫 문제 출제
+           renderOptions(); 
+           loadQuestion(); 
+           checkAnswerBtn.addEventListener('click', checkAnswer);
+           nextQuestionBtn.addEventListener('click', loadQuestion);
+
+           // 다크/라이트 모드 토글 버튼 리스너
+           themeToggleBtn.addEventListener('click', toggleDarkMode);
+
+           // 초기 탭 설정
+           switchTab('quiz'); 
+       }
+
+       initialize();
+   });
+</script>
+
+</body> </html>
