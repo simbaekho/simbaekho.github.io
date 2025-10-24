@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기압 고도 계산기</title>
+    <style>
+        /* 기본 스타일 초기화 */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f2f5;
+        }
+
+        /* 계산기 컨테이너 스타일 */
+        #calculator-container {
+            background: #ffffff;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+        }
+
+        /* 입력 필드 그룹 */
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem;
+            box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        /* 계산 버튼 */
+        button {
+            width: 100%;
+            padding: 0.85rem;
+            background-color: #007aff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* 결과 디스플레이 */
+        #result-display {
+            margin-top: 1.5rem;
+            min-height: 2.5em; /* 결과가 없을 때도 높이 유지 */
+            padding: 1rem;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        #result-display p {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #007aff;
+        }
+        
+        #result-display .error {
+            color: #d93025;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="calculator-container">
+        <h1>기압 고도 계산기 ✈️</h1>
+        
+        <div class="input-group">
+            <label for="hpa-input">기압 (hPa)</label>
+            <input type="number" id="hpa-input" placeholder="예: 775" step="any">
+        </div>
+        
+        <button id="calculate-button">고도 계산 (ft)</button>
+        
+        <div id="result-display">
+            </div>
+    </div>
+
+    <script>
+        /**
+         * 국제 표준 대기(ISA) 공식을 사용하여
+         * 기압(hPa)을 고도(ft)로 변환하는 핵심 함수.
+         * (JavaScript로 포팅됨)
+         */
+        function calculatePressureAltitude(pressureHpa) {
+            // --- 1. ISA 표준 상수 정의 (SI 단위 기준) ---
+            const P0 = 101325.0;     // 표준 해수면 기압 (Pa)
+            const T0 = 288.15;       // 표준 해수면 기온 (K)
+            const L_B = -0.0065;     // 표준 기온 감률 (K/m)
+            
+            const H_11 = 11000.0;    // 대류권계면 고도 (m)
+            const T_11 = 216.65;     // 대류권계면 기온 (K)
+            const P_11 = 22632.1;    // 대류권계면 기압 (Pa)
+
+            const G_0 = 9.80665;     // 표준 중력 가속도 (m/s^2)
+            const R_S = 287.058;     // 건조 공기 기체 상수 (J/(kg·K))
+            
+            const M_TO_FT = 3.28084; // 미터 -> 피트 변환 계수
+
+            // --- 2. 계산 ---
+            const pressurePa = pressureHpa * 100.0;
+            let altitudeM = 0.0;
+
+            // 기압이 226.321 hPa (P_11)보다 높은지 확인 -> 대류권
+            if (pressurePa > P_11) {
+                // 대류권 공식 (Lapse rate != 0)
+                const exponent = -(R_S * L_B) / G_0; // 약 0.190263
+                const pressureRatio = pressurePa / P0;
+                altitudeM = (T0 / L_B) * (Math.pow(pressureRatio, exponent) - 1.0);
+            } else {
+                // 성층권 하부 (등온층) 공식 (Lapse rate == 0)
+                const pressureRatio = pressurePa / P_11;
+                altitudeM = H_11 - (R_S * T_11 / G_0) * Math.log(pressureRatio);
+            }
+
+            // --- 3. 미터를 피트로 변환 ---
+            const altitudeFt = altitudeM * M_TO_FT;
+            return altitudeFt;
+        }
+
+        // --- DOM 요소 연결 및 이벤트 리스너 설정 ---
+        
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            const hpaInput = document.getElementById('hpa-input');
+            const calcButton = document.getElementById('calculate-button');
+            const resultDisplay = document.getElementById('result-display');
+
+            // 계산 함수
+            function performCalculation() {
+                const hpaValue = hpaInput.value;
+
+                // 입력값 유효성 검사
+                if (hpaValue === "") {
+                    resultDisplay.innerHTML = `<p class="error">기압을 입력해 주세요.</p>`;
+                    return;
+                }
+
+                const hpaFloat = parseFloat(hpaValue);
+
+                if (isNaN(hpaFloat) || hpaFloat <= 0) {
+                     resultDisplay.innerHTML = `<p class="error">유효한 숫자(0 초과)를 입력해 주세요.</p>`;
+                     return;
+                }
+
+                // 고도 계산
+                try {
+                    const altitude = calculatePressureAltitude(hpaFloat);
+                    // 결과 출력 (소수점 2자리까지)
+                    resultDisplay.innerHTML = `<p>${altitude.toFixed(2)} ft</p>`;
+                } catch (e) {
+                    resultDisplay.innerHTML = `<p class="error">계산 중 오류 발생: ${e.message}</p>`;
+                }
+            }
+
+            // '계산' 버튼 클릭 시
+            calcButton.addEventListener('click', performCalculation);
+            
+            // 'Enter' 키 입력 시 (편의 기능)
+            hpaInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    performCalculation();
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
